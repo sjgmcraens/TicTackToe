@@ -1,0 +1,207 @@
+﻿<Window x:Class="TicTackToe.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TicTackToe"
+        mc:Ignorable="d"
+        Title="TicTackToe"
+        MinHeight="450" MinWidth="600"
+        Height="450" Width="600"
+        Background="DarkSlateGray">
+
+
+
+    
+
+
+    <Grid Margin="15">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+
+        <StackPanel Name="StackPanel_Menu"
+                    DockPanel.Dock="Left"
+                    Margin="0,0,10,0">
+
+            <Button Content="Reset"
+                    BorderBrush="Black"
+                    BorderThickness="2"
+                    Background="Transparent"/>
+
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="You're playing: "
+                           Margin="0,10,0,0"/>
+                <TextBlock x:Name="PlayerTokenVisual"
+                           Text="X"
+                           FontWeight="Bold"
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+
+            <TextBlock x:Name="TurnNotifier"
+                       Text="It's your turn"/>
+
+
+        </StackPanel>
+
+
+
+        <Border Width="{Binding Path=ActualHeight, RelativeSource={RelativeSource Self}}"
+                Grid.Column="2"
+                BorderBrush="Black"
+                BorderThickness="2">
+            <Grid x:Name="Grid_Board">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="Opacity" Value="0.2" />
+                        <Setter Property="BorderBrush" Value="Red"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderThickness" Value="3"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="False">
+                                <Setter Property="BorderThickness" Value="0" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Resources>
+
+                <Button Grid.Row="0" Grid.Column="0" Background="Black"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="2" Grid.Column="0" Background="Black"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="0" Grid.Column="2" Background="Black"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="2" Grid.Column="2" Background="Black"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="1" Grid.Column="1" Background="Black"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="1" Grid.Column="0" Background="White"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="0" Grid.Column="1" Background="White"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="1" Grid.Column="2" Background="White"
+                        Click="Button_Board_Click"/>
+
+                <Button Grid.Row="2" Grid.Column="1" Background="White"
+                        Click="Button_Board_Click"/>
+
+                
+                <Canvas VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Name="Canvas_XTemplate"
+                        Visibility="Hidden">
+                    <Canvas.Resources>
+                        <Style TargetType="Line">
+                            <Setter Property="Stroke" Value="Black" />
+                            <Setter Property="StrokeThickness" Value="5" />
+                            <Setter Property="StrokeEndLineCap" Value="Round" />
+                            <Setter Property="StrokeStartLineCap" Value="Round" />
+                        </Style>
+                    </Canvas.Resources>
+                    <Line X1="-50" Y1="-50" X2="50" Y2="50"/>
+                    <Line X1="-50" Y1="50" X2="50" Y2="-50"/>
+                </Canvas>
+
+                <Canvas VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Name="Canvas_OTemplate"
+                        Visibility="Hidden">
+
+                    <Ellipse Width="100" Height="100"
+                             StrokeThickness="5"
+                             Stroke="Black"
+                             Canvas.Left="-50"
+                             Canvas.Top="-50"/>
+                </Canvas>
+
+
+            </Grid>
+        </Border>
+
+        
+        
+        
+        <Border BorderBrush="Black"
+                BorderThickness="2,2,0,2"
+                Grid.Column="1"
+                Width="20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Rectangle Grid.Row="1"
+                           Fill="Black"
+                           Opacity="0.2"/>
+                <Rectangle Grid.Row="0"
+                           Fill="White"
+                           Opacity="0.2"/>
+
+                <Canvas VerticalAlignment="Top"
+                        HorizontalAlignment="Center"
+                        Width="10"
+                        Height="10"
+                        Margin="5">
+                    <Canvas.Resources>
+                        <Style TargetType="Line">
+                            <Setter Property="Stroke" Value="Black" />
+                            <Setter Property="StrokeThickness" Value="2" />
+                            <Setter Property="StrokeEndLineCap" Value="Round" />
+                            <Setter Property="StrokeStartLineCap" Value="Round" />
+                        </Style>
+                    </Canvas.Resources>
+                    <Line X1="0" Y1="0" X2="10" Y2="10"/>
+                    <Line X1="0" Y1="10" X2="10" Y2="0"/>
+                </Canvas>
+
+                <Canvas Grid.Row="1"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Center"
+                        Width="10"
+                        Height="10"
+                        Margin="5">
+
+                    <Ellipse Width="12" Height="12"
+                             StrokeThickness="2"
+                             Stroke="Black"
+                             Canvas.Left="-1"/>
+                </Canvas>
+
+            </Grid>
+        </Border>
+
+        
+        
+
+        
+
+
+
+
+    </Grid>
+</Window>
