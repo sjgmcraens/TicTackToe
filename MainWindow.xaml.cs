@@ -21,48 +21,91 @@ namespace TicTackToe
     public partial class MainWindow : Window
     {
         //
-        TTTBoard mainBoard;
+        char[] mainBoard;
 
         // 0==X 1==O
-        int playerToken;
+        char playerToken = 'x';
+        char botToken = 'o';
 
         //
         bool playersTurn = false;
 
         //
+        string gameState;
+
+        //
         readonly Random globalRandom;
+
+        List<Canvas> visualTokens = new List<Canvas>();
 
         public MainWindow()
         {
             InitializeComponent();
-            mainBoard = new TTTBoard();
-            
+            mainBoard = new char[9];
+            mainBoard = mainBoard.Select(x => '0').ToArray();
+
+            gameState = "start";
+
             globalRandom = new Random();
 
-            NewPlayerToken(-1);
-
             SetPlayersTurn(true);
+            //SetRandomTurn();
+        }
+
+        private void ResetBoard()
+        {
+            mainBoard = mainBoard.Select(x => '0').ToArray();
+            // Remove visualTokens
+            for (int i=0; i< visualTokens.Count; i++)
+            {
+                Grid_Board.Children.Remove(visualTokens[i]);
+            }
+            visualTokens = new List<Canvas>();
         }
 
         private void Button_Board_Click(object sender, RoutedEventArgs e)
         {
             // Check if it is players turn
-            if (!playersTurn)
+            if (playersTurn)
             {
-                return;
+                // Get position
+                int col = Grid.GetColumn(sender as Button);
+                int row = Grid.GetRow(sender as Button);
+
+                // Check if square is taken
+                char bState = GetBoardState(col, row);
+                if (bState != '0')
+                {
+                    return;
+                }
+                else // If not taken
+                {
+                    // Update board
+                    DoMove(col, row, playerToken);
+                }
             }
+        }
 
-            int col = Grid.GetColumn(sender as Button);
-            int row = Grid.GetRow(sender as Button);
-
-            // Check if square is taken
-            if (mainBoard.state[col,row] != -1)
+        private void DoMove(int col, int row, char token)
+        {
+            UpdateBoardState(col, row, token);
+            if (gameState == "play")
             {
-                return;
+                if (token == playerToken)
+                {
+                    SetPlayersTurn(false);
+                }
+                else
+                {
+                    SetPlayersTurn(true);
+                }
             }
+        }
 
-            UpdateBoardState(col, row, playerToken);
-            SetPlayersTurn(false);
+        private char GetBoardState(int col, int row)
+        {
+            int i = row * 3 + col;
+            return mainBoard[i];
         }
 
         private void SetPlayersTurn(bool pTurn)
@@ -76,16 +119,55 @@ namespace TicTackToe
             {
                 playersTurn = false;
                 TurnNotifier.Text = "It's your opponents turn";
+                DoBotMove();
             }
         }
 
-        private void UpdateBoardState(int col, int row, int token)
+        private void DoBotMove()
         {
-            mainBoard.state[col, row] = playerToken;
+            int move = ToeFishNextMove();
+            DoMove(move%3, move/3, botToken);
+        }
+
+        private void UpdateBoardState(int col, int row, char token)
+        {
+            mainBoard[row * 3 + col] = token;
+
             Canvas visualToken = Get_CanvasTemplate(token);
             Grid.SetColumn(visualToken, col);
             Grid.SetRow(visualToken, row);
+            visualTokens.Add(visualToken);
             Grid_Board.Children.Add(visualToken);
+
+            // If Endstate
+            switch (GetEndState(mainBoard))
+            {
+                case '0':
+                    break;
+                case 'd':
+                    InvokeEndState("draw");
+                    break;
+                case 'x':
+                    InvokeEndState("playerWin");
+                    break;
+                case 'o':
+                    InvokeEndState("botWin");
+                    break;
+            }
+        }
+
+        private void InvokeEndState(string state)
+        {
+            gameState = "end";
+
+            switch (state)
+            {
+                case "draw":      TextBlock_EndGame_Title.Text = "It's a draw!"; TextBlock_EndGame_SubTitle.Text = "This tends to happen a lot..."; break;
+                case "playerWin": TextBlock_EndGame_Title.Text = "You won!";     TextBlock_EndGame_SubTitle.Text = "Huh... This wasn't supposed to happen."; break;
+                case "botWin":    TextBlock_EndGame_Title.Text = "You lost!";    TextBlock_EndGame_SubTitle.Text = "Who would have guessed."; break;
+            }
+            Border_EndGame.Visibility = Visibility.Visible;
+            ResetBoard();
         }
 
         private Canvas Get_CanvasTemplate(int token)
@@ -93,7 +175,7 @@ namespace TicTackToe
             Canvas C;
             switch (token)
             {
-                case 0:
+                case 'x':
                     C = new Canvas()
                     {
                         VerticalAlignment = VerticalAlignment.Center,
@@ -122,7 +204,7 @@ namespace TicTackToe
                         StrokeStartLineCap = PenLineCap.Round
                     });
                     break;
-                case 1:
+                case 'o':
                     C = new Canvas()
                     {
                         VerticalAlignment = VerticalAlignment.Center,
@@ -135,7 +217,7 @@ namespace TicTackToe
                         Stroke = Brushes.Black,
                         StrokeThickness = 5
                     };
-                    Canvas.SetLeft(E,-50);
+                    Canvas.SetLeft(E, -50);
                     Canvas.SetTop(E, -50);
                     C.Children.Add(E);
                     break;
@@ -146,52 +228,147 @@ namespace TicTackToe
             return C;
         }
 
-        private void NewPlayerToken(int lastToken)
+        private void SetRandomTurn()
         {
-            switch (lastToken)
+            switch (globalRandom.Next(0, 2))
             {
                 case 0:
-                    playerToken = 1;
-                    break;
-                case 1:
-                    playerToken = 0;
-                    break;
-                default:
-                    playerToken = globalRandom.Next(0, 2);
-                    break;
-            }
-            switch (playerToken)
-            {
-                case 0:
-                    PlayerTokenVisual.Text = "X";
+                    SetPlayersTurn(true);
                     return;
                 case 1:
-                    PlayerTokenVisual.Text = "O";
+                    SetPlayersTurn(false);
                     return;
             }
-            
         }
 
-        class TTTBoard
+        public int ToeFishNextMove()
         {
-            // -1=empty, 0=X, 1=O
-            public int[,] state;
-            public TTTBoard()
-            {
-                state = new int[3, 3];
-                Reset();
-            }
+            /// Based on the current board, determine the best move.
+            /// Bot token == 'x'
 
-            public void Reset()
+            List<int> movesWithMaxScore = new List<int>();
+            int maxScore = -100000;
+
+            // For each square
+            for (int i = 0; i < mainBoard.Length; i++)
             {
-                for (int i=0; i< state.GetLength(0); i++)
+                // If legal move
+                if (mainBoard[i] == '0')
                 {
-                    for (int j = 0; j < state.GetLength(1); j++)
+                    // Calc score
+                    char[] bCopy = new char[mainBoard.Length];
+                    Array.Copy(mainBoard, bCopy, mainBoard.Length);
+                    int score = GetMoveScore(bCopy, i);
+                    if (score > maxScore)
                     {
-                        state[i, j] = -1;
+                        movesWithMaxScore = new List<int>() { i };
+                    }
+                    else if (score == maxScore)
+                    {
+                        movesWithMaxScore.Add(i);
                     }
                 }
+
             }
+
+            // Do random move out of movesWithMaxScore
+            return movesWithMaxScore[globalRandom.Next(0, movesWithMaxScore.Count)];
+        }
+
+        private int GetMoveScore(char[] board, int move)
+        {
+            // Do move
+            board[move] = botToken;
+
+            // Return score based on possible end state.
+            switch (GetEndState(board))
+            {
+                case 'x': // PlayerWin
+                    return -1;
+                case 'o':
+                    return 1;
+                case 'd':
+                    return 0;
+            }
+
+            int score = 0;
+
+            // No end state
+            for (int i = 0; i < board.Length; i++)
+            {
+                // If legal move
+                if (board[i] == '0')
+                {
+                    // Calc score
+                    score += GetMoveScore(board, i);
+                }
+            }
+            return score;
+        }
+
+        public static char GetEndState(char[] b)
+        {
+            // Returns 'x' for playerWin
+            // Returns 'd' for draw
+            // Returns 'o' for botWin
+            // Returns '0' for no endstate
+
+            if (b[4] != '0')
+            {
+                if (b[4] == b[0] && b[4] == b[8] ||
+                    b[4] == b[2] && b[4] == b[6] ||
+                    b[4] == b[1] && b[4] == b[7] ||
+                    b[4] == b[3] && b[4] == b[5])
+                {
+                    return b[4];
+                }
+            }
+
+            if (b[0] != '0')
+            {
+                if (b[0] == b[1] && b[0] == b[2] ||
+                    b[0] == b[3] && b[0] == b[6])
+                {
+                    return b[0];
+                }
+            }
+
+            if (b[8] != '0')
+            {
+                if (b[8] == b[2] && b[8] == b[5] ||
+                    b[8] == b[6] && b[8] == b[7])
+                {
+                    return b[8];
+                }
+            }
+
+            // Check for draw
+            if (b.All(x => x != '0'))
+            {
+                return 'd';
+            }
+
+            // No end state detected
+            return '0';
+        }
+
+        private void Button_EndGame_Return_Click(object sender, RoutedEventArgs e)
+        {
+            Border_EndGame.Visibility = Visibility.Hidden;
+            ResetGame();
+        }
+
+        private void ResetGame()
+        {
+            gameState = "start";
+            Border_StartGame.Visibility = Visibility.Visible;
+            ResetBoard();
+        }
+
+        private void Button_StartGame_Click(object sender, RoutedEventArgs e)
+        {
+            gameState = "play";
+            Border_StartGame.Visibility = Visibility.Hidden;
         }
     }
 }
