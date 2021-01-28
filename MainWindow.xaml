@@ -35,6 +35,18 @@
                     Name="Button_MenuReset"
                     Click="Button_MenuReset_Click"/>
 
+            <Button BorderBrush="Black"
+                    BorderThickness="2"
+                    Background="Transparent"
+                    Name="Button_ChooseBot"
+                    Click="Button_ChooseBot_Click"
+                    Margin="0,10,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Bot: "/>
+                    <TextBlock Text="Randy"
+                               Name="TextBlock_CurrentBot"/>
+                </StackPanel>
+            </Button>
 
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="You're playing: "

@@ -27,6 +27,8 @@ namespace TicTackToe
         char playerToken = 'x';
         char botToken = 'o';
 
+        string currentBot = "Randy";
+
         //
         bool playersTurn = false;
 
@@ -126,7 +128,13 @@ namespace TicTackToe
 
         private void DoBotMove()
         {
-            int move = ToeFishNextMove();
+            int move;
+            switch (currentBot)
+            {
+                case "Randy":   move = RandyNextMove(); break;
+                case "ToeFish": move = ToeFishNextMove(); break;
+                default:        move = RandyNextMove(); break;
+            }
             DoMove(move%3, move/3, botToken);
         }
 
@@ -241,7 +249,7 @@ namespace TicTackToe
             }
         }
 
-        public int ToeFishNextMove()
+        private int ToeFishNextMove()
         {
             /// Based on the current board, determine the best move.
             /// Bot token == 'x'
@@ -256,9 +264,17 @@ namespace TicTackToe
                 moveScores.Add(move, GetMoveScore(GetCopy(mainBoard), move));
             }
 
-            // Do first best move
-            return moveScores.Where(p => p.Value == moveScores.Values.Max()).ToArray()[0].Key;
+            // Do random best move
+            return RandomChoice(moveScores.Where(p => p.Value == moveScores.Values.Max()).Select(x => x.Key).ToArray());
         }
+
+        private int RandyNextMove()
+        {
+            // Do random legal move
+            return RandomChoice(Enumerable.Range(0, mainBoard.Length).Where(x => mainBoard[x] == '0').ToArray());
+        }
+
+
 
         private float GetMoveScore(char[] board, int move)
         {
@@ -386,6 +402,35 @@ namespace TicTackToe
             char[] arrC = new char[arr.Length];
             Array.Copy(arr, arrC, arr.Length);
             return arrC;
+        }
+
+
+        private int RandomChoice(int[] E)
+        {
+            return E[globalRandom.Next(E.Length)];
+        }
+
+        private void Button_ChooseBot_Click(object sender, RoutedEventArgs e)
+        {
+            switch (currentBot)
+            {
+                case "Randy": SetCurrentBot("ToeFish"); break;
+                case "ToeFish": SetCurrentBot("Randy"); break;
+            }
+        }
+
+        private void SetCurrentBot(string botName)
+        {
+            switch (botName)
+            {
+                case "Randy": 
+                    currentBot = "Randy";
+                    break;
+                case "ToeFish": 
+                    currentBot = "ToeFish"; 
+                    break;
+            }
+            TextBlock_CurrentBot.Text = currentBot;
         }
     }
 }
