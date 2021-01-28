@@ -61,6 +61,7 @@ namespace TicTackToe
                 Grid_Board.Children.Remove(visualTokens[i]);
             }
             visualTokens = new List<Canvas>();
+
         }
 
         private void Button_Board_Click(object sender, RoutedEventArgs e)
@@ -167,7 +168,6 @@ namespace TicTackToe
                 case "botWin":    TextBlock_EndGame_Title.Text = "You lost!";    TextBlock_EndGame_SubTitle.Text = "Who would have guessed."; break;
             }
             Border_EndGame.Visibility = Visibility.Visible;
-            ResetBoard();
         }
 
         private Canvas Get_CanvasTemplate(int token)
@@ -246,36 +246,21 @@ namespace TicTackToe
             /// Based on the current board, determine the best move.
             /// Bot token == 'x'
 
-            List<int> movesWithMaxScore = new List<int>();
-            int maxScore = -100000;
 
-            // For each square
-            for (int i = 0; i < mainBoard.Length; i++)
+            // We keep a dictionairy of moves
+            Dictionary<int, float> moveScores = new Dictionary<int, float>();
+
+            // Calc move scores
+            foreach (int move in Enumerable.Range(0, mainBoard.Length).Where(x => mainBoard[x] == '0'))
             {
-                // If legal move
-                if (mainBoard[i] == '0')
-                {
-                    // Calc score
-                    char[] bCopy = new char[mainBoard.Length];
-                    Array.Copy(mainBoard, bCopy, mainBoard.Length);
-                    int score = GetMoveScore(bCopy, i);
-                    if (score > maxScore)
-                    {
-                        movesWithMaxScore = new List<int>() { i };
-                    }
-                    else if (score == maxScore)
-                    {
-                        movesWithMaxScore.Add(i);
-                    }
-                }
-
+                moveScores.Add(move, GetMoveScore(GetCopy(mainBoard), move));
             }
 
-            // Do random move out of movesWithMaxScore
-            return movesWithMaxScore[globalRandom.Next(0, movesWithMaxScore.Count)];
+            // Do first best move
+            return moveScores.Where(p => p.Value == moveScores.Values.Max()).ToArray()[0].Key;
         }
 
-        private int GetMoveScore(char[] board, int move)
+        private float GetMoveScore(char[] board, int move)
         {
             // Do move
             board[move] = botToken;
@@ -283,25 +268,38 @@ namespace TicTackToe
             // Return score based on possible end state.
             switch (GetEndState(board))
             {
-                case 'x': // PlayerWin
-                    return -1;
                 case 'o':
-                    return 1;
+                    return 1F;
                 case 'd':
-                    return 0;
+                    return 0F;
             }
 
-            int score = 0;
-
-            // No end state
+            // Determine score based on players next move
             for (int i = 0; i < board.Length; i++)
             {
                 // If legal move
                 if (board[i] == '0')
                 {
-                    // Calc score
-                    score += GetMoveScore(board, i);
+                    var b = GetCopy(board);
+                    b[i] = playerToken;
+                    switch (GetEndState(b))
+                    {
+                        case 'x': // PlayerWin
+                            return -1F;
+                        case 'd':
+                            return 0F;
+                    }
                 }
+            }
+
+            // Determine score based on deeper movesets
+            float score = 0;
+
+            // No end state ==> go deeper
+            foreach (int m in Enumerable.Range(0, board.Length).Where(x => board[x] == '0'))
+            {
+                // Calc score ==> depth means /10
+                score += GetMoveScore(GetCopy(board), m) / 10;
             }
             return score;
         }
@@ -369,6 +367,25 @@ namespace TicTackToe
         {
             gameState = "play";
             Border_StartGame.Visibility = Visibility.Hidden;
+
+            // If bot's turn
+            SetRandomTurn();
+            if (!playersTurn)
+            {
+                DoBotMove();
+            }
+        }
+
+        private void Button_MenuReset_Click(object sender, RoutedEventArgs e)
+        {
+            ResetGame();
+        }
+
+        private char[] GetCopy(char[] arr)
+        {
+            char[] arrC = new char[arr.Length];
+            Array.Copy(arr, arrC, arr.Length);
+            return arrC;
         }
     }
 }

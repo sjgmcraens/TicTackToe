@@ -31,7 +31,9 @@
             <Button Content="Reset"
                     BorderBrush="Black"
                     BorderThickness="2"
-                    Background="Transparent"/>
+                    Background="Transparent"
+                    Name="Button_MenuReset"
+                    Click="Button_MenuReset_Click"/>
 
 
             <StackPanel Orientation="Horizontal">
