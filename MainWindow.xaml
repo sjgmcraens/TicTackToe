@@ -38,8 +38,8 @@
             <Button BorderBrush="Black"
                     BorderThickness="2"
                     Background="Transparent"
-                    Name="Button_ChooseBot"
-                    Click="Button_ChooseBot_Click"
+                    Name="Button_CycleBot"
+                    Click="Button_CycleBot_Click"
                     Margin="0,10,0,0">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Bot: "/>
